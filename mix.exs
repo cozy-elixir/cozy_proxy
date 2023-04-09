@@ -27,7 +27,8 @@ defmodule CozyProxy.MixProject do
     [
       {:plug_cowboy, ">= 2.6.0"},
       {:phoenix, "~> 1.7", only: [:test]},
-      {:jason, "~> 1.0", only: [:test]}
+      {:jason, "~> 1.0", only: [:test]},
+      {:websock_adapter, ">= 0.5.0", only: [:test]}
     ]
   end
 end
