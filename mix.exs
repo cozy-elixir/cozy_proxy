@@ -25,6 +25,7 @@ defmodule CozyProxy.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
+      {:plug, "~> 1.14"},
       {:plug_cowboy, ">= 2.6.0"},
       {:phoenix, "~> 1.7", only: [:test]},
       {:jason, "~> 1.0", only: [:test]},
