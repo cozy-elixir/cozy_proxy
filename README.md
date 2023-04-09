@@ -27,8 +27,8 @@ This library is based on:
 
 - [main_proxy](https://github.com/Main-Proxy/main_proxy)
 - [snake_proxy](https://github.com/evadne/snake/tree/master/apps/snake_proxy)
-- [master_proxy](https://github.com/wojtekmach/acme_bank/tree/master/apps/master_proxy) application inside the [acme_bank](https://github.com/wojtekmach/acme_bank) project from [wojtekmach](https://github.com/wojtekmach).
-- [master_proxy.ex](https://gist.github.com/Gazler/fe7ed5dc598250002dfe) from [Gazler](https://github.com/Gazler).
+- [master_proxy](https://github.com/wojtekmach/acme_bank/tree/master/apps/master_proxy) application inside the [acme_bank](https://github.com/wojtekmach/acme_bank) project from [wojtekmach](https://github.com/wojtekmach)
+- [master_proxy.ex](https://gist.github.com/Gazler/fe7ed5dc598250002dfe) from [Gazler](https://github.com/Gazler)
 
 ## License
 
