@@ -9,7 +9,7 @@ defmodule CozyProxy.MixProject do
     [
       app: :cozy_proxy,
       version: @version,
-      elixir: "~> 1.14",
+      elixir: "~> 1.13",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       deps: deps(),
