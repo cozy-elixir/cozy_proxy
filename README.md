@@ -1,5 +1,8 @@
 # CozyProxy
 
+[![CI](https://github.com/cozy-elixir/cozy_proxy/actions/workflows/ci.yml/badge.svg)](https://github.com/cozy-elixir/cozy_proxy/actions/workflows/ci.yml)
+[![Hex.pm](https://img.shields.io/hexpm/v/cozy_proxy.svg)](https://hex.pm/packages/cozy_proxy)
+
 > Proxy requests to other plugs.
 
 ## Installation
