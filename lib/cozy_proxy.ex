@@ -93,6 +93,7 @@ defmodule CozyProxy do
 
     Enum.reduce(supported_schemes, children, fn scheme, children ->
       if options = Map.get(config, scheme) do
+        # credo:disable-for-next-line Credo.Check.Refactor.Nesting
         Logger.info(fn -> gen_listen_info(scheme, options) end)
         [build_child(scheme, options, config.backends) | children]
       else
