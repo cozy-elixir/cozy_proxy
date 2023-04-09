@@ -5,6 +5,9 @@ defmodule CozyProxy.Config do
 
   defstruct http: nil, https: nil, server: false, backends: []
 
+  @type t :: %__MODULE__{}
+
+  @doc false
   def new!(config) do
     config
     |> as_map!()

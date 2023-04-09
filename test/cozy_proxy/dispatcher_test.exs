@@ -54,7 +54,7 @@ defmodule CozyProxy.DispatcherTest do
     end
 
     test "is supported", %{backends: _backends} do
-      # TODO: I don't know how to test it for now
+      # I don't know how to test it for now
     end
   end
 

@@ -9,6 +9,9 @@ defmodule CozyProxy.Backend do
     :path
   ]
 
+  @type t :: %__MODULE__{}
+
+  @doc false
   def new!(config) do
     config
     |> as_map!()
