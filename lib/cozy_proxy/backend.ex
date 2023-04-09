@@ -14,7 +14,6 @@ defmodule CozyProxy.Backend do
     |> as_map!()
     |> as_struct!()
     |> validate_plug_option!()
-    |> validate_other_options!()
   end
 
   defp as_map!(config) when is_map(config), do: config
@@ -37,15 +36,6 @@ defmodule CozyProxy.Backend do
   end
 
   defp validate_plug_option!(%__MODULE__{} = config) do
-    config
-  end
-
-  defp validate_other_options!(%__MODULE__{verb: nil, domain: nil, host: nil, path: nil}) do
-    raise ArgumentError,
-          "backend config should at least include one of the following options: :verb, :domain, :host, :path"
-  end
-
-  defp validate_other_options!(%__MODULE__{} = config) do
     config
   end
 end
