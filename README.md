@@ -19,7 +19,7 @@ end
 
 ## Usage
 
-For more information, see the [documentation](https://hexdocs.pm/cozy_proxy/CozyProxy).
+For more information, see the [documentation](https://hexdocs.pm/cozy_proxy/CozyProxy.html).
 
 ## Thanks
 
