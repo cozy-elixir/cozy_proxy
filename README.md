@@ -32,4 +32,4 @@ This library is based on:
 
 ## License
 
-MIT
+Apache License 2.0
