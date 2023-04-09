@@ -67,7 +67,7 @@ defmodule CozyProxy.DispatcherTest do
         Backend.new!(plug: SamplePhoenix.Endpoint)
       ]
 
-      start_link_supervised!(SamplePhoenix.Endpoint)
+      start_supervised!(SamplePhoenix.Endpoint)
 
       %{backends: backends}
     end
