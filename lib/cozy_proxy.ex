@@ -1,25 +1,62 @@
 defmodule CozyProxy do
   @moduledoc """
+  Proxy requests to other plugs.
 
-  ## Example
+  ## Usage
 
-      children = [
-        {CozyProxy,
-         [
-           http: [port: 8080],
-           https: [port: 8443],
-           backends: [
-             %{
-               plug: DemoWeb.Endpoint,
-               domain: "site1.example.com"
-             },
-             %{
-               plug: {DemoPlug, []},
-               domain: "site2.example.com"
-             }
-           ]
-         ]}
+  Set base configurations within config files:
+
+  ```elixir
+  config :demo_app, CozyProxy,
+    [
+      http: [port: 8080],
+      backends: [
+        %{
+          plug: SubAppWeb.Endpoint,
+          domain: "site1.example.com"
+        },
+        %{
+          plug: {DemoPlug, []},
+          domain: "site2.example.com"
+        }
       ]
+    ]
+  ```
+
+  `CozyProxy` instances are isolated supervision trees and you can include it in application's supervisor.
+
+  Use the application configuration you've just set and include `CozyProxy` in the list of supervised children:
+
+  ```elixir
+  # lib/demo_app/application.ex
+  def start(_type, _args) do
+    children = [
+      # ...
+      {CozyProxy, Application.fetch_env!(:demo_app, CozyProxy)}
+    ]
+
+    opts = [strategy: :one_for_one, name: Closet.Supervisor]
+    Supervisor.start_link(children, opts)
+  end
+  ```
+
+  When using `CozyProxy`, it's better to configure Phoenix endpoints to not start servers, in order to avoid Phoenix endpoints bypassing `CozyProxy`:
+
+  ```elixir
+  config :demo_app, SubAppWeb.Endpoint, server: false
+  ```
+
+  ## Available options of configuration
+
+  - `:http` - the configuration for the HTTP server. It accepts all options as defined by [Plug.Cowboy](https://hexdocs.pm/plug_cowboy/).
+  - `:https` - the configuration for the HTTPS server. It accepts all options as defined by [Plug.Cowboy](https://hexdocs.pm/plug_cowboy/).
+  - `:server` - `true` by default. If you are running the application with `mix phx.server`, this option is ignored, and the server will always be started.
+  - `:backends` - the configuration of backends:
+    - `:plug`
+    - `:domain`
+    - `:verb`
+    - `:host`
+    - `:path`
 
   """
 
