@@ -37,9 +37,13 @@ defmodule CozyProxy.MixProject do
     [
       {:plug, "~> 1.14"},
       {:plug_cowboy, ">= 2.6.0"},
-      {:ex_doc, "~> 0.25", only: :dev, runtime: false},
+      {:ex_check, "~> 0.15.0", only: [:dev], runtime: false},
+      {:credo, ">= 0.0.0", only: [:dev], runtime: false},
+      {:dialyxir, ">= 0.0.0", only: [:dev], runtime: false},
+      {:doctor, ">= 0.0.0", only: [:dev], runtime: false},
+      {:ex_doc, ">= 0.0.0", only: [:dev], runtime: false},
+      {:mix_audit, ">= 0.0.0", only: [:dev], runtime: false},
       {:phoenix, "~> 1.7", only: [:test]},
-      {:jason, "~> 1.0", only: [:test]},
       {:websock_adapter, ">= 0.5.0", only: [:test]}
     ]
   end
