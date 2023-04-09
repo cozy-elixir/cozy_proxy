@@ -99,11 +99,19 @@ defmodule CozyProxy do
 
     Enum.reduce(supported_schemes, children, fn scheme, children ->
       if options = Map.get(config, scheme) do
+        Logger.info(fn -> gen_listen_info(scheme, options) end)
         [build_child(scheme, options, config.backends) | children]
       else
         children
       end
     end)
+  end
+
+  defp gen_listen_info(scheme, options) do
+    default_ip = {0, 0, 0, 0}
+    ip = Keyword.get(options, :ip, default_ip)
+    port = Keyword.get(options, :port)
+    "#{inspect(__MODULE__)} is listening on #{scheme}://#{:inet.ntoa(ip)}:#{port}"
   end
 
   defp build_child(scheme, options, backends) do
