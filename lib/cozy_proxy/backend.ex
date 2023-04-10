@@ -3,8 +3,7 @@ defmodule CozyProxy.Backend do
 
   defstruct [
     :plug,
-    :verb,
-    :domain,
+    :method,
     :host,
     :path
   ]

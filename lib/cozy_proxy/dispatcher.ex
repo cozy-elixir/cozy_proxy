@@ -14,25 +14,75 @@ defmodule CozyProxy.Dispatcher do
 
   @impl true
   def call(conn, backends: backends) do
-    backend = choose_backend(conn, backends)
+    {conn, backend} = choose_backend(conn, backends)
     dispatch(conn, backend)
   end
 
   @fallback_backend %Backend{plug: ErrorPlug}
 
   defp choose_backend(conn, backends) do
-    Enum.find(backends, @fallback_backend, fn backend ->
-      is_backend_matched?(conn, backend)
+    Enum.find_value(backends, {conn, @fallback_backend}, fn backend ->
+      {conn, is_matched?} = match_backend(conn, backend)
+      if is_matched?, do: {conn, backend}
     end)
   end
 
-  defp is_backend_matched?(conn, %Backend{verb: verb, domain: domain, host: host, path: path}) do
-    is_verb_matched? = if verb, do: Regex.match?(verb, conn.method), else: true
-    is_domain_matched? = if domain, do: conn.host == domain, else: true
-    is_host_matched? = if host, do: Regex.match?(host, conn.host), else: true
-    is_path_matched? = if path, do: Regex.match?(path, conn.request_path), else: true
+  defp match_backend(conn, %Backend{} = backend) do
+    checks = [&check_method/2, &check_host/2, &check_path/2]
 
-    is_verb_matched? && is_domain_matched? && is_host_matched? && is_path_matched?
+    Enum.reduce_while(checks, {conn, true}, fn check, _acc ->
+      result = {_conn, is_matched?} = check.(conn, backend)
+
+      action = if is_matched?, do: :cont, else: :halt
+      {action, result}
+    end)
+  end
+
+  defp check_method(conn, %Backend{method: nil}), do: {conn, true}
+  defp check_method(conn, %Backend{method: method}), do: {conn, method == conn.method}
+
+  defp check_host(conn, %Backend{host: nil}), do: {conn, true}
+  defp check_host(conn, %Backend{host: host}), do: {conn, host == conn.host}
+
+  defp check_path(conn, %Backend{path: nil}), do: {conn, true}
+
+  defp check_path(conn, %Backend{path: path}) do
+    conn_path_info = String.split(conn.request_path, "/", trim: true)
+    matched_path_info = String.split(path, "/", trim: true)
+
+    if List.starts_with?(conn_path_info, matched_path_info) do
+      # Rewrite the request path
+      #
+      # If there's a backend like this:
+      #
+      #   %Backend{
+      #     plug: ...,
+      #     method: nil,
+      #     host: nil,
+      #     path: "/api"
+      #   }
+      #
+      # The request path "/api/v1/users" will be rewritten as "/v1/users".
+      #
+      count = length(conn_path_info) - length(matched_path_info)
+      new_path_info = Enum.take(conn_path_info, -count)
+      {rewrite_path(conn, new_path_info), true}
+    else
+      {conn, false}
+    end
+  end
+
+  defp rewrite_path(conn, path_info) do
+    request_path =
+      path_info
+      |> Enum.join("/")
+      |> then(&"/#{&1}")
+
+    %{
+      conn
+      | request_path: request_path,
+        path_info: path_info
+    }
   end
 
   defp dispatch(conn, %Backend{plug: plug}) do

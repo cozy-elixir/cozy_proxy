@@ -50,7 +50,7 @@ defmodule CozyProxy do
       config :demo, DemoWebAPI.Endpoint, server: false
       config :demo, DemoAdminWeb.Endpoint, server: false
 
-  ## Available options of configuration
+  ## Configurations
 
     * `:http` - the configuration for the HTTP server. It accepts all options as defined by
       [Plug.Cowboy](https://hexdocs.pm/plug_cowboy/).
@@ -61,7 +61,7 @@ defmodule CozyProxy do
       be always considered as `true`.
     * `:backends` - the configuration of backends. See next section for more details.
 
-  ### Available options of `:backends`
+  ### about `:backends`
 
   A valid configuration of `:backends` is a list of maps, and the keys of maps are:
 
@@ -72,7 +72,7 @@ defmodule CozyProxy do
         * `HealthCheckPlug`
         * `{HealthCheckPlug, []}`
         * ...
-    * `:verb`:
+    * `:method`:
       * optional
       * typespec: `String.t()`
       * examples:
@@ -92,6 +92,22 @@ defmodule CozyProxy do
         * `"/admin"`
         * `"/api"`
         * ...
+
+  ## Notes
+
+  ### Rewritting path
+
+  If there's a backend like this:
+
+      %Backend{
+        plug: ...,
+        method: nil,
+        host: nil,
+        path: "/api"
+      }
+
+  When the backend is matched, the request path like `/api/v1/users` will be rewritten as
+  `/v1/users`.
 
   """
 
