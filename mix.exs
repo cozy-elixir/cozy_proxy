@@ -1,7 +1,7 @@
 defmodule CozyProxy.MixProject do
   use Mix.Project
 
-  @version "0.1.2"
+  @version "0.2.0"
   @description "Proxy requests to other plugs."
   @source_url "https://github.com/cozy-elixir/cozy_proxy"
 
