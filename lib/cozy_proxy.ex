@@ -21,26 +21,24 @@ defmodule CozyProxy do
   Above code requires a piece of configuration:
 
       config :demo, CozyProxy,
-        [
-          http: [port: 8080],
-          backends: [
-            %{
-              plug: HealthCheckPlug,
-              path: "/health-check"
-            },
-            %{
-              plug: DemoWebAPI.Endpoint,
-              path: "/api"
-            },
-            %{
-              plug: DemoAdminWeb.Endpoint,
-              path: "/admin"
-            },
-            %{
-              plug: DemoWeb.Endpoint,
-              path: "/"
-            }
-          ]
+        http: [port: 8080],
+        backends: [
+          %{
+            plug: HealthCheckPlug,
+            path: "/health-check"
+          },
+          %{
+            plug: DemoWebAPI.Endpoint,
+            path: "/api"
+          },
+          %{
+            plug: DemoAdminWeb.Endpoint,
+            path: "/admin"
+          },
+          %{
+            plug: DemoWeb.Endpoint,
+            path: "/"
+          }
         ]
 
   When using `CozyProxy`, it's better to configure Phoenix endpoints to not start servers, in
@@ -108,6 +106,54 @@ defmodule CozyProxy do
 
   When the backend is matched, the request path like `/api/v1/users` will be rewritten as
   `/v1/users`.
+
+  ### The order of backends matters
+
+  If you configure the backends like this:
+
+      config :demo, CozyProxy,
+        backends: [
+          %{
+            plug: DemoUserWeb.Endpoint,
+            path: "/"
+          },
+          %{
+            plug: DemoUserAPI.Endpoint,
+            path: "/api"
+          },
+          %{
+            plug: DemoAdminWeb.Endpoint,
+            path: "/admin"
+          },
+          %{
+            plug: HealthCheck,
+            path: "/health-check"
+          }
+        ]
+
+  The first backend will always match, which may not what you expected.
+
+  If you want all backends to have a chance to match, you should configure them like this:
+
+      config :demo, CozyProxy,
+        backends: [
+          %{
+            plug: HealthCheck,
+            path: "/health-check"
+          },
+          %{
+            plug: DemoUserAPI.Endpoint,
+            path: "/api"
+          },
+          %{
+            plug: DemoAdminWeb.Endpoint,
+            path: "/admin"
+          },
+          %{
+            plug: DemoUserWeb.Endpoint,
+            path: "/"
+          }
+        ]
 
   """
 
