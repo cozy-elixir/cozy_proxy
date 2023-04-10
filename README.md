@@ -5,6 +5,12 @@
 
 > Proxy requests to other plugs.
 
+## Features
+
+- General plug support
+- WebSocket support (requires [`Plug >= 1.14`](https://github.com/elixir-plug/plug/blob/2ef07cdd2732cde5cac73fc39b49fe83d5fcc369/README.md?plain=1#L71))
+- Phoenix Endpoint support (requires [`Phoenix >= 1.7`](https://github.com/phoenixframework/phoenix/blob/v1.7.0/mix.exs#L73))
+
 ## Installation
 
 Add `cozy_proxy` to the list of dependencies in `mix.exs`:
@@ -23,7 +29,7 @@ For more information, see the [documentation](https://hexdocs.pm/cozy_proxy/Cozy
 
 ## Thanks
 
-This library is based on:
+This library is built on the wisdom in following code:
 
 - [main_proxy](https://github.com/Main-Proxy/main_proxy)
 - [snake_proxy](https://github.com/evadne/snake/tree/master/apps/snake_proxy)
