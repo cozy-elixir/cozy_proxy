@@ -4,53 +4,94 @@ defmodule CozyProxy do
 
   ## Usage
 
-  Set base configurations within config files:
+  `CozyProxy` instances are isolated supervision trees and you can include it in application's
+  supervisor:
 
-      config :demo_app, CozyProxy,
+      # lib/demo/application.ex
+      def start(_type, _args) do
+        children = [
+          # ...
+          {CozyProxy, Application.fetch_env!(:demo, CozyProxy)}
+        ]
+
+        opts = [strategy: :one_for_one, name: Demo.Supervisor]
+        Supervisor.start_link(children, opts)
+      end
+
+  Above code requires a piece of configuration:
+
+      config :demo, CozyProxy,
         [
           http: [port: 8080],
           backends: [
             %{
-              plug: SubAppWeb.Endpoint,
-              domain: "site1.example.com"
+              plug: HealthCheckPlug,
+              path: "/health-check"
             },
             %{
-              plug: {DemoPlug, []},
-              domain: "site2.example.com"
+              plug: DemoWebAPI.Endpoint,
+              path: "/api"
+            },
+            %{
+              plug: DemoAdminWeb.Endpoint,
+              path: "/admin"
+            },
+            %{
+              plug: DemoWeb.Endpoint,
+              path: "/"
             }
           ]
         ]
 
-  `CozyProxy` instances are isolated supervision trees and you can include it in application's supervisor.
+  When using `CozyProxy`, it's better to configure Phoenix endpoints to not start servers, in
+  order to avoid Phoenix endpoints bypassing `CozyProxy`:
 
-  Use the application configuration you've just set and include `CozyProxy` in the list of supervised children:
-
-      # lib/demo_app/application.ex
-      def start(_type, _args) do
-        children = [
-          # ...
-          {CozyProxy, Application.fetch_env!(:demo_app, CozyProxy)}
-        ]
-
-        opts = [strategy: :one_for_one, name: Closet.Supervisor]
-        Supervisor.start_link(children, opts)
-      end
-
-  When using `CozyProxy`, it's better to configure Phoenix endpoints to not start servers, in order to avoid Phoenix endpoints bypassing `CozyProxy`:
-
-      config :demo_app, SubAppWeb.Endpoint, server: false
+      config :demo, DemoWeb.Endpoint, server: false
+      config :demo, DemoWebAPI.Endpoint, server: false
+      config :demo, DemoAdminWeb.Endpoint, server: false
 
   ## Available options of configuration
 
-  - `:http` - the configuration for the HTTP server. It accepts all options as defined by [Plug.Cowboy](https://hexdocs.pm/plug_cowboy/).
-  - `:https` - the configuration for the HTTPS server. It accepts all options as defined by [Plug.Cowboy](https://hexdocs.pm/plug_cowboy/).
-  - `:server` - `true` by default. If you are running the application with `mix phx.server`, this option is ignored, and the server will always be started.
-  - `:backends` - the configuration of backends:
-    - `:plug`
-    - `:domain`
-    - `:verb`
-    - `:host`
-    - `:path`
+    * `:http` - the configuration for the HTTP server. It accepts all options as defined by
+      [Plug.Cowboy](https://hexdocs.pm/plug_cowboy/).
+    * `:https` - the configuration for the HTTPS server. It accepts all options as defined by
+      [Plug.Cowboy](https://hexdocs.pm/plug_cowboy/).
+    * `:server` - `false` by default. It can be aware of Phoenix startup arguments, if you are
+      running the application with `mix phx.server` or `iex -S mix phx.server`, this option will
+      be always considered as `true`.
+    * `:backends` - the configuration of backends. See next section for more details.
+
+  ### Available options of `:backends`
+
+  A valid configuration of `:backends` is a list of maps, and the keys of maps are:
+
+    * `:plug`:
+      * required
+      * typespec: `module() | {module(), keyword()}`
+      * examples:
+        * `HealthCheckPlug`
+        * `{HealthCheckPlug, []}`
+        * ...
+    * `:verb`:
+      * optional
+      * typespec: `String.t()`
+      * examples:
+        * `"GET"`
+        * `"POST"`
+        * ...
+    * `:host`:
+      * optional
+      * typespec: `String.t()`
+      * examples:
+        * `"example.com"`
+        * ...
+    * `:path`:
+      * optional
+      * typespec: `String.t()`
+      * examples:
+        * `"/admin"`
+        * `"/api"`
+        * ...
 
   """
 
