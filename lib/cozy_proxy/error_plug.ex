@@ -1,10 +1,10 @@
 defmodule CozyProxy.ErrorPlug do
   @moduledoc false
 
-  @behaviour Plug
-
   import Plug.Conn
   require Logger
+
+  @behaviour Plug
 
   @impl true
   def init(opts) do
