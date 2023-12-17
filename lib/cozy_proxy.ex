@@ -93,20 +93,6 @@ defmodule CozyProxy do
 
   ## Notes
 
-  ### Rewritting path
-
-  If there's a backend like this:
-
-      %Backend{
-        plug: ...,
-        method: nil,
-        host: nil,
-        path: "/api"
-      }
-
-  When the backend is matched, the request path like `/api/v1/users` will be rewritten as
-  `/v1/users`.
-
   ### The order of backends matters
 
   If you configure the backends like this:
