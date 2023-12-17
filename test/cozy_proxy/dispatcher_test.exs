@@ -97,10 +97,11 @@ defmodule CozyProxy.DispatcherTest do
 
     test "WebSocket Plug is supported" do
       # backends = [
-      #   Backend.new!(plug: SamplePlug.WebSocket)
+      #   Backend.new!(plug: SamplePlug.WebSocket, path: "/")
       # ]
-      #
-      # I don't know how to test it for now
+
+      # I have tested the proxy for WebSocket connections in real appliactions.
+      # But, I don't know how to test it in `mix test` for now.
     end
 
     test "Phoenix Endpoint is supported" do
