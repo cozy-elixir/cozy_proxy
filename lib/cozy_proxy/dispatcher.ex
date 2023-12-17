@@ -8,19 +8,8 @@ defmodule CozyProxy.Dispatcher do
   @behaviour Plug
 
   @impl true
-  def init(backends: backends) do
-    backends =
-      Enum.map(backends, fn backend ->
-        plug =
-          case backend.plug do
-            {mod, opts} -> {mod, mod.init(opts)}
-            mod -> {mod, mod.init([])}
-          end
-
-        %{backend | plug: plug}
-      end)
-
-    [backends: backends]
+  def init(opts) do
+    opts
   end
 
   @impl true
@@ -55,51 +44,47 @@ defmodule CozyProxy.Dispatcher do
   defp check_host(conn, %Backend{host: :unset}), do: {conn, false}
   defp check_host(conn, %Backend{host: host}), do: {conn, host == conn.host}
 
-  defp check_path(conn, %Backend{path: :unset}), do: {conn, false}
+  defp check_path(conn, %Backend{path_info: :unset}), do: {conn, false}
 
-  defp check_path(conn, %Backend{path: path}) do
-    conn_path_info = String.split(conn.request_path, "/", trim: true)
-    matched_path_info = String.split(path, "/", trim: true)
+  defp check_path(conn, %Backend{path_info: path_info}),
+    do: {conn, List.starts_with?(conn.path_info, path_info)}
 
-    if List.starts_with?(conn_path_info, matched_path_info) do
-      # Rewrite the request path
-      #
-      # If there's a backend like this:
-      #
-      #   %Backend{
-      #     plug: ...,
-      #     method: nil,
-      #     host: nil,
-      #     path: "/api"
-      #   }
-      #
-      # The request path "/api/v1/users" will be rewritten as "/v1/users".
-      #
-      count = length(conn_path_info) - length(matched_path_info)
-      new_path_info = Enum.take(conn_path_info, -count)
-      {rewrite_path(conn, new_path_info), true}
-    else
-      {conn, false}
-    end
+  defp dispatch(conn, %Backend{plug: {mod, opts}, path_info: :unset}) do
+    mod.call(conn, opts)
   end
 
-  defp rewrite_path(conn, path_info) do
-    request_path =
-      path_info
-      |> Enum.join("/")
-      |> then(&"/#{&1}")
+  # Inspired by `Plug.forward/4`
+  defp dispatch(conn, %Backend{plug: {mod, opts}, path_info: path_info_prefix})
+       when is_list(path_info_prefix) do
+    %{
+      path_info: path_info,
+      script_name: script_name
+    } = conn
 
+    # rewrite path_info of conn and sent it to the plug module
+    conn =
+      conn
+      |> rewrite_path_info(path_info_prefix)
+      |> mod.call(opts)
+
+    # restore path_info of conn
     %{
       conn
-      | request_path: request_path,
-        path_info: path_info
+      | path_info: path_info,
+        script_name: script_name
     }
   end
 
-  defp dispatch(conn, %Backend{plug: plug}) do
-    case plug do
-      {plug, opts} -> plug.call(conn, opts)
-      plug -> plug.call(conn, [])
-    end
+  defp rewrite_path_info(conn, path_info_prefix) do
+    %{path_info: path_info, script_name: script_name} = conn
+
+    {base, new_path_info} = Enum.split(path_info, length(path_info_prefix))
+    new_script_name = script_name ++ base
+
+    %{
+      conn
+      | path_info: new_path_info,
+        script_name: new_script_name
+    }
   end
 end

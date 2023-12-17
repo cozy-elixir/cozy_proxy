@@ -73,6 +73,11 @@ defmodule CozyProxy.DispatcherTest do
       assert conn.state == :sent
       assert conn.status == 200
       assert conn.resp_body == "Plug: Hello, World!"
+
+      # the internal implemention modify conn
+      assert conn.request_path == "/api"
+      assert conn.path_info == ["api"]
+      assert conn.script_name == []
     end
   end
 
