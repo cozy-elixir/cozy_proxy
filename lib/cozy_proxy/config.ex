@@ -21,7 +21,7 @@ defmodule CozyProxy.Config do
 
   defp as_map!(config) do
     raise ArgumentError,
-          "config should be a map or a keyword list, but #{inspect(config)} is provided"
+          "config must be a map or a keyword list, but #{inspect(config)} is given"
   end
 
   defp as_struct!(config) do
@@ -31,12 +31,24 @@ defmodule CozyProxy.Config do
     Map.merge(default_struct, config)
   end
 
-  defp validate_backends!(%__MODULE__{backends: backends} = config) when is_list(backends) do
-    config
-  end
+  defp validate_backends!(%__MODULE__{backends: backends} = config) do
+    if !is_list(backends) do
+      raise ArgumentError, "backends config must be a list, but #{inspect(backends)} is given"
+    end
 
-  defp validate_backends!(%__MODULE__{}) do
-    raise ArgumentError, "backends config should be a list"
+    for backend <- backends do
+      if !is_map(backend) and !is_list(backend) do
+        raise ArgumentError,
+              "backend config must be a map or a keyword list, but #{inspect(backend)} is given"
+      end
+
+      if !backend.plug do
+        raise ArgumentError,
+              "backend must include :plug option, but #{inspect(backend)} is given"
+      end
+    end
+
+    config
   end
 
   defp struct_backends!(%__MODULE__{backends: backends} = config) do
