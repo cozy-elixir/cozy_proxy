@@ -10,14 +10,22 @@ defmodule CozyProxy.DispatcherTest do
     Dispatcher.call(conn, opts)
   end
 
-  describe "Empty backends" do
-    setup do
+  describe "Dispatch request to error plug" do
+    test "when backends are empty" do
       backends = []
+      conn = conn(:get, "/")
+      conn = dispatch(conn, backends)
 
-      %{backends: backends}
+      assert conn.state == :sent
+      assert conn.status == 404
+      assert conn.resp_body == "No backends matched"
     end
 
-    test "will cause the request to be sent to the error plug", %{backends: backends} do
+    test "when no backend is matched" do
+      backends = [
+        Backend.new!(plug: SamplePlug.General)
+      ]
+
       conn = conn(:get, "/")
       conn = dispatch(conn, backends)
 
@@ -27,55 +35,84 @@ defmodule CozyProxy.DispatcherTest do
     end
   end
 
-  describe "Plug - General" do
-    setup do
+  describe "Dispatch request" do
+    test "by matching method is supported" do
       backends = [
-        Backend.new!(plug: SamplePlug.General)
+        Backend.new!(plug: SamplePlug.General, method: "POST")
       ]
 
-      %{backends: backends}
-    end
-
-    test "is supported", %{backends: backends} do
-      conn = conn(:get, "/")
+      conn = conn(:post, "/")
       conn = dispatch(conn, backends)
 
+      assert conn.state == :sent
+      assert conn.status == 200
+      assert conn.resp_body == "Plug: Hello, World!"
+    end
+
+    test "by matching host is supported" do
+      backends = [
+        Backend.new!(plug: SamplePlug.General, host: "test.example.com")
+      ]
+
+      conn = conn(:post, "https://test.example.com/")
+      conn = dispatch(conn, backends)
+
+      assert conn.state == :sent
+      assert conn.status == 200
+      assert conn.resp_body == "Plug: Hello, World!"
+    end
+
+    test "by matching path is supported" do
+      backends = [
+        Backend.new!(plug: SamplePlug.General, path: "/api")
+      ]
+
+      conn = conn(:post, "/api")
+      conn = dispatch(conn, backends)
+
+      assert conn.state == :sent
+      assert conn.status == 200
       assert conn.resp_body == "Plug: Hello, World!"
     end
   end
 
-  describe "Plug - WebSocket" do
-    setup do
+  describe "Respond with" do
+    test "General Plug is supported" do
       backends = [
-        Backend.new!(plug: SamplePlug.WebSocket)
+        Backend.new!(plug: SamplePlug.General, method: "GET")
       ]
 
-      %{backends: backends}
+      conn = conn(:get, "/")
+      conn = dispatch(conn, backends)
+
+      assert conn.state == :sent
+      assert conn.status == 200
+      assert conn.resp_body == "Plug: Hello, World!"
     end
 
-    test "is supported", %{backends: _backends} do
+    test "WebSocket Plug is supported" do
+      # backends = [
+      #   Backend.new!(plug: SamplePlug.WebSocket)
+      # ]
+      #
       # I don't know how to test it for now
     end
-  end
 
-  describe "Phoenix Endpoint" do
-    setup do
+    test "Phoenix Endpoint is supported" do
       # prevent the warning of missing necessary configuration
       Application.put_env(:sample_phoenix, SamplePhoenix.Endpoint, [])
 
       backends = [
-        Backend.new!(plug: SamplePhoenix.Endpoint)
+        Backend.new!(plug: SamplePhoenix.Endpoint, method: "GET")
       ]
 
       start_supervised!(SamplePhoenix.Endpoint)
 
-      %{backends: backends}
-    end
-
-    test "is supported", %{backends: backends} do
       conn = conn(:get, "/")
       conn = dispatch(conn, backends)
 
+      assert conn.state == :sent
+      assert conn.status == 200
       assert conn.resp_body == "Phoenix: Hello, World!"
     end
   end

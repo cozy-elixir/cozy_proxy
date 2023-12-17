@@ -1,12 +1,10 @@
 defmodule CozyProxy.Backend do
   @moduledoc false
 
-  defstruct [
-    :plug,
-    :method,
-    :host,
-    :path
-  ]
+  defstruct plug: :unset,
+            method: :unset,
+            host: :unset,
+            path: :unset
 
   @type t :: %__MODULE__{}
 
@@ -33,8 +31,8 @@ defmodule CozyProxy.Backend do
     Map.merge(default_struct, config)
   end
 
-  defp validate_plug_option!(%__MODULE__{plug: nil}) do
-    raise ArgumentError, "backend config should include :plug option"
+  defp validate_plug_option!(%__MODULE__{plug: :unset}) do
+    raise ArgumentError, "backend must include :plug option"
   end
 
   defp validate_plug_option!(%__MODULE__{} = config) do

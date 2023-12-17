@@ -14,14 +14,16 @@ defmodule SamplePlug.General do
   @behaviour Plug
 
   @impl true
-  def init(opts) do
-    opts
+  def init(_opts) do
+    # This part of the code was intentionally constructed to test the
+    # init/1 process.
+    [resp: "Plug: Hello, World!"]
   end
 
   @impl true
-  def call(conn, _opts) do
+  def call(conn, opts) do
     conn
     |> put_resp_content_type("text/plain")
-    |> send_resp(200, "Plug: Hello, World!")
+    |> send_resp(200, opts[:resp])
   end
 end

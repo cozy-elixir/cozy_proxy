@@ -8,8 +8,19 @@ defmodule CozyProxy.Dispatcher do
   @behaviour Plug
 
   @impl true
-  def init(opts) do
-    opts
+  def init(backends: backends) do
+    backends =
+      Enum.map(backends, fn backend ->
+        plug =
+          case backend.plug do
+            {mod, opts} -> {mod, mod.init(opts)}
+            mod -> {mod, mod.init([])}
+          end
+
+        %{backend | plug: plug}
+      end)
+
+    [backends: backends]
   end
 
   @impl true
@@ -18,7 +29,7 @@ defmodule CozyProxy.Dispatcher do
     dispatch(conn, backend)
   end
 
-  @fallback_backend %Backend{plug: ErrorPlug}
+  @fallback_backend %Backend{plug: {ErrorPlug, []}}
 
   defp choose_backend(conn, backends) do
     Enum.find_value(backends, {conn, @fallback_backend}, fn backend ->
@@ -33,18 +44,18 @@ defmodule CozyProxy.Dispatcher do
     Enum.reduce_while(checks, {conn, true}, fn check, _acc ->
       result = {_conn, is_matched?} = check.(conn, backend)
 
-      action = if is_matched?, do: :cont, else: :halt
+      action = if is_matched?, do: :halt, else: :cont
       {action, result}
     end)
   end
 
-  defp check_method(conn, %Backend{method: nil}), do: {conn, true}
+  defp check_method(conn, %Backend{method: :unset}), do: {conn, false}
   defp check_method(conn, %Backend{method: method}), do: {conn, method == conn.method}
 
-  defp check_host(conn, %Backend{host: nil}), do: {conn, true}
+  defp check_host(conn, %Backend{host: :unset}), do: {conn, false}
   defp check_host(conn, %Backend{host: host}), do: {conn, host == conn.host}
 
-  defp check_path(conn, %Backend{path: nil}), do: {conn, true}
+  defp check_path(conn, %Backend{path: :unset}), do: {conn, false}
 
   defp check_path(conn, %Backend{path: path}) do
     conn_path_info = String.split(conn.request_path, "/", trim: true)
