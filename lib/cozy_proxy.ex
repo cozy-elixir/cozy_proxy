@@ -166,7 +166,7 @@ defmodule CozyProxy do
         adapter: Plug.Cowboy,
         scheme: :http,
         ip: {0, 0, 0, 0},
-        port: 4000,
+        port: 4000
       ]
 
   """
