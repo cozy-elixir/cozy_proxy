@@ -4,8 +4,8 @@ defmodule CozyProxy do
 
   ## Usage
 
-  `CozyProxy` instances are isolated supervision trees and you can include it in application's
-  supervisor:
+  A `CozyProxy` instance is an isolated supervision tree and you can include it in
+  application's supervisor:
 
       # lib/demo/application.ex
       def start(_type, _args) do
@@ -21,7 +21,7 @@ defmodule CozyProxy do
   Above code requires a piece of configuration:
 
       config :demo, CozyProxy,
-        http: [port: 8080],
+        server: true,
         backends: [
           %{
             plug: HealthCheckPlug,
@@ -41,27 +41,31 @@ defmodule CozyProxy do
           }
         ]
 
-  When using `CozyProxy`, it's better to configure Phoenix endpoints to not start servers, in
-  order to avoid Phoenix endpoints bypassing `CozyProxy`:
+  When using `CozyProxy`, it's better to configure Phoenix endpoints to not start servers,
+  in order to avoid Phoenix endpoints bypassing `CozyProxy`:
 
       config :demo, DemoWeb.Endpoint, server: false
       config :demo, DemoWebAPI.Endpoint, server: false
       config :demo, DemoAdminWeb.Endpoint, server: false
 
-  ## Configurations
+  ## Options
 
-    * `:http` - the configuration for the HTTP server. It accepts all options as defined by
-      [Plug.Cowboy](https://hexdocs.pm/plug_cowboy/).
-    * `:https` - the configuration for the HTTPS server. It accepts all options as defined by
-      [Plug.Cowboy](https://hexdocs.pm/plug_cowboy/).
-    * `:server` - `false` by default. It can be aware of Phoenix startup arguments, if you are
-      running the application with `mix phx.server` or `iex -S mix phx.server`, this option will
-      be always considered as `true`.
-    * `:backends` - the configuration of backends. See next section for more details.
+    * `:server` - start the web server or not. Default to `false`. It is aware
+      of Phoenix startup arguments, if the application is started with
+      `mix phx.server` or `iex -S mix phx.server`, this option will set
+      to `true`.
+    * `:backends` - the list of backends. Default to `[]`. See next section for
+      more details.
+    * `:adapter` - the adapter for web server, `Plug.Cowboy` and `Bandit` are
+      available. Default to `Plug.Cowboy`.
+    * All other options will be put into an keyword list and passed as the options of
+      the adapter:
+      * For `Plug.Cowboy`, checkout [Plug.Cowboy.child_spec/1](https://hexdocs.pm/plug_cowboy/Plug.Cowboy.html#child_spec/1).
+      * For `Bandit`, checkout [Bandit.options/0](https://hexdocs.pm/bandit/Bandit.html#t:options/0).
 
   ### about `:backends`
 
-  A valid configuration of `:backends` is a list of maps, and the keys of maps are:
+  A valid `:backends` option is a list of maps, and the keys of maps are:
 
     * `:plug`:
       * required
@@ -91,8 +95,6 @@ defmodule CozyProxy do
         * `"/api"`
         * ...
 
-  ## Notes
-
   ### The order of backends matters
 
   If you configure the backends like this:
@@ -113,7 +115,7 @@ defmodule CozyProxy do
           },
           %{
             plug: HealthCheck,
-            path: "/health-check"
+            path: "/health"
           }
         ]
 
@@ -125,7 +127,7 @@ defmodule CozyProxy do
         backends: [
           %{
             plug: HealthCheck,
-            path: "/health-check"
+            path: "/health"
           },
           %{
             plug: DemoUserAPI.Endpoint,
@@ -141,6 +143,32 @@ defmodule CozyProxy do
           }
         ]
 
+  ## Examples
+
+      # Example options for dev environment
+      [
+        backends: [
+          # ...
+        ]
+        adapter: Plug.Cowboy,
+        scheme: :http,
+        ip: {127, 0, 0, 1},
+        port: 4000,
+        transport_options: [num_acceptors: 2]
+      ]
+
+      # Example options for prod environment
+      [
+        server: true,
+        backends: [
+          # ...
+        ]
+        adapter: Plug.Cowboy,
+        scheme: :http,
+        ip: {0, 0, 0, 0},
+        port: 4000,
+      ]
+
   """
 
   use Supervisor
@@ -154,16 +182,80 @@ defmodule CozyProxy do
 
   @impl true
   def init(init_arg) do
-    config = Config.new!(init_arg)
+    {server, rest_arg} = Keyword.pop(init_arg, :server, false)
+    {adapter, rest_arg} = Keyword.pop(rest_arg, :adapter, Plug.Cowboy)
+    {backends, rest_arg} = Keyword.pop(rest_arg, :backends, [])
+
+    adapter_config =
+      rest_arg
+      |> Keyword.delete(:plug)
+      |> Keyword.put_new(:scheme, :http)
+      |> Keyword.put_new(:ip, {127, 0, 0, 1})
+      |> put_new_port()
+
+    config =
+      Config.new!(%{
+        server: server,
+        adapter: adapter,
+        adapter_config: adapter_config,
+        backends: backends
+      })
+
+    check_adapter_module!(config.adapter)
 
     start_server? = config.server || is_phoenix_on?()
 
     children =
       if start_server?,
-        do: build_children(config),
+        do: [build_child(config)],
         else: []
 
     Supervisor.init(children, strategy: :one_for_one)
+  end
+
+  defp put_new_port(adapter_config) do
+    Keyword.put_new_lazy(adapter_config, :port, fn ->
+      scheme = Keyword.fetch!(adapter_config, :scheme)
+      get_default_port(scheme)
+    end)
+  end
+
+  # Same as the default ports of Plug.Cowboy and Bandit
+  defp get_default_port(:http = _scheme), do: 4000
+  defp get_default_port(:https = _scheme), do: 4040
+
+  defp check_adapter_module!(Plug.Cowboy) do
+    unless Code.ensure_loaded?(Plug.Cowboy) do
+      Logger.error("""
+      Could not find Plug.Cowboy dependency. Please add :plug_cowboy to your dependencies:
+
+          {:plug_cowboy, "~> 2.6"}
+
+      """)
+
+      raise "missing Plug.Cowboy dependency"
+    end
+
+    :ok
+  end
+
+  defp check_adapter_module!(Bandit) do
+    unless Code.ensure_loaded?(Bandit) do
+      Logger.error("""
+      Could not find Bandit dependency. Please add :bandit to your dependencies:
+
+          {:bandit, "~> 1.0"}
+
+      """)
+
+      raise "missing Bandit dependency"
+    end
+
+    :ok
+  end
+
+  defp check_adapter_module!(adapter) do
+    raise "unknown adapter #{inspect(adapter)}"
   end
 
   # Consinder Phoenix is on when meets following cases:
@@ -175,33 +267,38 @@ defmodule CozyProxy do
     Application.get_env(:phoenix, :serve_endpoints, false)
   end
 
-  defp build_children(%Config{} = config) do
-    supported_schemes = [:http, :https]
+  defp build_child(%Config{} = config) do
+    %{adapter: adapter, adapter_config: adapter_config, backends: backends} = config
 
-    children = []
+    Logger.info(fn -> gen_listen_line(adapter_config) end)
 
-    Enum.reduce(supported_schemes, children, fn scheme, children ->
-      if options = Map.get(config, scheme) do
-        # credo:disable-for-next-line Credo.Check.Refactor.Nesting
-        Logger.info(fn -> gen_listen_info(scheme, options) end)
-        [build_child(scheme, options, config.backends) | children]
-      else
-        children
-      end
-    end)
-  end
-
-  defp gen_listen_info(scheme, options) do
-    default_ip = {0, 0, 0, 0}
-    ip = Keyword.get(options, :ip, default_ip)
-    port = Keyword.get(options, :port)
-    "#{inspect(__MODULE__)} is listening on #{scheme}://#{:inet.ntoa(ip)}:#{port}"
-  end
-
-  defp build_child(scheme, options, backends) do
     {
-      Plug.Cowboy,
-      scheme: scheme, plug: {Dispatcher, [backends: backends]}, options: options
+      adapter,
+      [plug: {Dispatcher, [backends: backends]}] ++ build_adapter_opts(adapter, adapter_config)
     }
+  end
+
+  defp build_adapter_opts(Plug.Cowboy = _adapter, adapter_config) do
+    {scheme, options} = Keyword.pop!(adapter_config, :scheme)
+    [scheme: scheme, options: options]
+  end
+
+  defp build_adapter_opts(Bandit = _adapter, adapter_config) do
+    adapter_config
+  end
+
+  defp gen_listen_line(adapter_config) do
+    scheme = Keyword.fetch!(adapter_config, :scheme)
+    ip = Keyword.fetch!(adapter_config, :ip)
+    port = Keyword.fetch!(adapter_config, :port)
+    "#{inspect(__MODULE__)} is listening on #{scheme}://#{format_ip(ip)}:#{port}"
+  end
+
+  defp format_ip(ip) do
+    if :inet.is_ip_address(ip) do
+      :inet.ntoa(ip)
+    else
+      inspect(ip)
+    end
   end
 end

@@ -3,7 +3,10 @@ defmodule CozyProxy.Config do
 
   alias CozyProxy.Backend
 
-  defstruct http: nil, https: nil, server: false, backends: []
+  defstruct server: false,
+            adapter: nil,
+            adapter_config: nil,
+            backends: []
 
   @type t :: %__MODULE__{}
 

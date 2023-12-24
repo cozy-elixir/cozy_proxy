@@ -36,7 +36,8 @@ defmodule CozyProxy.MixProject do
   defp deps do
     [
       {:plug, "~> 1.14"},
-      {:plug_cowboy, ">= 2.6.0"},
+      {:plug_cowboy, ">= 2.6.0", optional: true},
+      {:bandit, "~> 1.0", optional: true},
       {:ex_check, "~> 0.15.0", only: [:dev], runtime: false},
       {:credo, ">= 0.0.0", only: [:dev], runtime: false},
       {:dialyxir, ">= 0.0.0", only: [:dev], runtime: false},
@@ -44,13 +45,13 @@ defmodule CozyProxy.MixProject do
       {:ex_doc, ">= 0.0.0", only: [:dev], runtime: false},
       {:mix_audit, ">= 0.0.0", only: [:dev], runtime: false},
       {:phoenix, "~> 1.7", only: [:test]},
-      {:websock_adapter, ">= 0.5.0", only: [:test]}
+      {:websock_adapter, "~> 0.5", only: [:test]}
     ]
   end
 
   defp docs do
     [
-      extras: ["README.md"],
+      extras: ["README.md", "CHANGELOG.md"],
       main: "readme",
       source_url: @source_url,
       source_ref: @version
