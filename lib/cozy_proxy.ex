@@ -295,7 +295,7 @@ defmodule CozyProxy do
   end
 
   defp format_ip(ip) do
-    if :inet.is_ip_address(ip) do
+    if is_tuple(ip) do
       :inet.ntoa(ip)
     else
       inspect(ip)
