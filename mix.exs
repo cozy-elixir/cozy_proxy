@@ -54,7 +54,7 @@ defmodule CozyProxy.MixProject do
       extras: ["README.md", "CHANGELOG.md"],
       main: "readme",
       source_url: @source_url,
-      source_ref: @version
+      source_ref: "v#{@version}"
     ]
   end
 
@@ -71,8 +71,8 @@ defmodule CozyProxy.MixProject do
   end
 
   defp tag_release(_) do
-    Mix.shell().info("Tagging release as #{@version}")
-    System.cmd("git", ["tag", @version])
+    Mix.shell().info("Tagging release as v#{@version}")
+    System.cmd("git", ["tag", "v#{@version}"])
     System.cmd("git", ["push", "--tags"])
   end
 end
