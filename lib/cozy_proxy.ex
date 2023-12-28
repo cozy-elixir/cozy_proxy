@@ -22,6 +22,10 @@ defmodule CozyProxy do
 
       config :demo, CozyProxy,
         server: true,
+        adapter: Plug.Cowboy,
+        scheme: :http,
+        ip: {127, 0, 0, 1},
+        port: 4000,
         backends: [
           %{
             plug: HealthCheckPlug,
@@ -54,16 +58,14 @@ defmodule CozyProxy do
       of Phoenix startup arguments, if the application is started with
       `mix phx.server` or `iex -S mix phx.server`, this option will set
       to `true`.
-    * `:backends` - the list of backends. Default to `[]`. See next section for
+    * `:backends` - the list of backends. Default to `[]`. See following section for
       more details.
     * `:adapter` - the adapter for web server, `Plug.Cowboy` and `Bandit` are
       available. Default to `Plug.Cowboy`.
-    * All other options will be put into an keyword list and passed as the options of
-      the adapter:
-      * For `Plug.Cowboy`, checkout [Plug.Cowboy.child_spec/1](https://hexdocs.pm/plug_cowboy/Plug.Cowboy.html#child_spec/1).
-      * For `Bandit`, checkout [Bandit.options/0](https://hexdocs.pm/bandit/Bandit.html#t:options/0).
+    * adapter options - all other options will be put into an keyword list and
+      passed as the options of the adapter. See following section for more details.
 
-  ### about `:backends`
+  ## About `:backends`
 
   A valid `:backends` option is a list of maps, and the keys of maps are:
 
@@ -143,31 +145,40 @@ defmodule CozyProxy do
           }
         ]
 
-  ## Examples
+  ## About adapter options
 
-      # Example options for dev environment
-      [
+  In the section of Options, we said:
+
+  > all other options will be put into an keyword list and passed as the options of the adapter.
+
+  It means the all options except `:server`, `:backends`, `:adapter` will be passed as the
+  the options of an adapter.
+
+  Take `Plug.Cowboy` adapter as an example. If we declare the options like:
+
+      config :demo, CozyProxy,
         backends: [
           # ...
-        ]
+        ],
         adapter: Plug.Cowboy,
+        scheme: :http,
+        ip: {127, 0, 0, 1},
+        port: 4000,
+        transport_options: [num_acceptors: 2]
+
+  Then following options will be passed to `Plug.Cowboy` when initializing CozyProxy:
+
+      [
         scheme: :http,
         ip: {127, 0, 0, 1},
         port: 4000,
         transport_options: [num_acceptors: 2]
       ]
 
-      # Example options for prod environment
-      [
-        server: true,
-        backends: [
-          # ...
-        ]
-        adapter: Plug.Cowboy,
-        scheme: :http,
-        ip: {0, 0, 0, 0},
-        port: 4000
-      ]
+  For more available adapter options:
+
+    * `Plug.Cowboy` - checkout [Plug.Cowboy options](https://hexdocs.pm/plug_cowboy/Plug.Cowboy.html#module-options).
+    * `Bandit` - checkout [Bandit options](https://hexdocs.pm/bandit/Bandit.html#t:options/0).
 
   """
 
