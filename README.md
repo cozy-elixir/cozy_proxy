@@ -20,7 +20,7 @@ Add `:cozy_proxy` to the list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:cozy_proxy, "~> <version>"}
+    {:cozy_proxy, <requirement>}
   ]
 end
 ```
