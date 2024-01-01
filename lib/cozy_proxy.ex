@@ -45,12 +45,22 @@ defmodule CozyProxy do
           }
         ]
 
-  When using `CozyProxy`, it's better to configure Phoenix endpoints to not start servers,
-  in order to avoid Phoenix endpoints bypassing `CozyProxy`:
+  When using `CozyProxy` with Phoenix endpoints, it's required to configure
+  the path of endpoints to a proper value. And it's better to configure
+  `:server` option of endpoints to `false`, which avoids them serving requests
+  bypassing `CozyProxy`. For example:
 
-      config :demo, DemoWeb.Endpoint, server: false
-      config :demo, DemoWebAPI.Endpoint, server: false
-      config :demo, DemoAdminWeb.Endpoint, server: false
+      config :demo, DemoWeb.Endpoint,
+        url: [path: "/"],
+        server: false
+
+      config :demo, DemoWebAPI.Endpoint,
+        url: [path: "/api"],
+        server: false
+
+      config :demo, DemoAdminWeb.Endpoint,
+        url: [path: "/admin"],
+        server: false
 
   ## Options
 
