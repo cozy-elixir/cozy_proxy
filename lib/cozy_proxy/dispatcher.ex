@@ -28,13 +28,12 @@ defmodule CozyProxy.Dispatcher do
   end
 
   defp match_backend(conn, %Backend{} = backend) do
-    checks = [&check_method/2, &check_host/2, &check_path/2]
-
-    Enum.reduce_while(checks, {conn, true}, fn check, _acc ->
-      result = {_conn, is_matched?} = check.(conn, backend)
-
-      action = if is_matched?, do: :halt, else: :cont
-      {action, result}
+    [&check_method/2, &check_host/2, &check_path/2]
+    |> Enum.reduce_while({conn, true}, fn check, _acc ->
+      case check.(conn, backend) do
+        {conn, false} -> {:cont, {conn, false}}
+        {conn, true} -> {:halt, {conn, true}}
+      end
     end)
   end
 
@@ -42,7 +41,11 @@ defmodule CozyProxy.Dispatcher do
   defp check_method(conn, %Backend{method: method}), do: {conn, method == conn.method}
 
   defp check_host(conn, %Backend{host: :unset}), do: {conn, false}
-  defp check_host(conn, %Backend{host: host}), do: {conn, host == conn.host}
+  defp check_host(conn, %Backend{host: host}) when is_binary(host), do: {conn, host == conn.host}
+
+  defp check_host(conn, %Backend{host: host_regex}) when is_struct(host_regex, Regex) do
+    {conn, String.match?(conn.host, host_regex)}
+  end
 
   defp check_path(conn, %Backend{path_info: :unset}), do: {conn, false}
 

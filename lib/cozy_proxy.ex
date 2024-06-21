@@ -95,7 +95,7 @@ defmodule CozyProxy do
         * ...
     * `:host`:
       * optional
-      * typespec: `String.t()`
+      * typespec: `String.t()` | `Regex.t()`
       * examples:
         * `"example.com"`
         * ...

@@ -62,6 +62,19 @@ defmodule CozyProxy.DispatcherTest do
       assert conn.resp_body == "Plug: Hello, World!"
     end
 
+    test "by matching host via regex is supported" do
+      backends = [
+        Backend.new!(plug: SamplePlug.General, host: ~r/^test/)
+      ]
+
+      conn = conn(:post, "https://test.example.com/")
+      conn = dispatch(conn, backends)
+
+      assert conn.state == :sent
+      assert conn.status == 200
+      assert conn.resp_body == "Plug: Hello, World!"
+    end
+
     test "by matching path is supported" do
       backends = [
         Backend.new!(plug: SamplePlug.General, path: "/api")
