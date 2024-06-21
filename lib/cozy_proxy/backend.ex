@@ -5,7 +5,8 @@ defmodule CozyProxy.Backend do
             method: :unset,
             host: :unset,
             path: :unset,
-            path_info: :unset
+            path_info: :unset,
+            rewrite_path_info: true
 
   @type t :: %__MODULE__{}
 

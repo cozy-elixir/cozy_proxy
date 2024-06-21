@@ -54,7 +54,11 @@ defmodule CozyProxy.Dispatcher do
   end
 
   # Inspired by `Plug.forward/4`
-  defp dispatch(conn, %Backend{plug: {mod, opts}, path_info: path_info_prefix})
+  defp dispatch(conn, %Backend{
+         plug: {mod, opts},
+         path_info: path_info_prefix,
+         rewrite_path_info: true
+       })
        when is_list(path_info_prefix) do
     %{
       path_info: path_info,
