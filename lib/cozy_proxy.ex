@@ -106,6 +106,13 @@ defmodule CozyProxy do
         * `"/admin"`
         * `"/api"`
         * ...
+    * `:rewrite_path_info`:
+      * optional
+      * typespec: `boolean()`
+      * default: `true`
+      * examples:
+        * `true`
+        * `false`
 
   ### The order of backends matters
 

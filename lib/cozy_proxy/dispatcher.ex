@@ -49,10 +49,6 @@ defmodule CozyProxy.Dispatcher do
   defp check_path(conn, %Backend{path_info: path_info}),
     do: {conn, List.starts_with?(conn.path_info, path_info)}
 
-  defp dispatch(conn, %Backend{plug: {mod, opts}, path_info: :unset}) do
-    mod.call(conn, opts)
-  end
-
   # Inspired by `Plug.forward/4`
   defp dispatch(conn, %Backend{
          plug: {mod, opts},
@@ -77,6 +73,10 @@ defmodule CozyProxy.Dispatcher do
       | path_info: path_info,
         script_name: script_name
     }
+  end
+
+  defp dispatch(conn, %Backend{plug: {mod, opts}}) do
+    mod.call(conn, opts)
   end
 
   defp rewrite_path_info(conn, path_info_prefix) do

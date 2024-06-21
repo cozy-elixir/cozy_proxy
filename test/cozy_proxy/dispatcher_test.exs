@@ -81,6 +81,34 @@ defmodule CozyProxy.DispatcherTest do
     end
   end
 
+  describe "Path rewriting" do
+    test "is enabled by default" do
+      backends = [
+        Backend.new!(plug: SamplePlug.EchoPath, path: "/api")
+      ]
+
+      conn = conn(:post, "/api/v1")
+      conn = dispatch(conn, backends)
+
+      assert conn.state == :sent
+      assert conn.status == 200
+      assert conn.resp_body == "/v1"
+    end
+
+    test "can be disabled" do
+      backends = [
+        Backend.new!(plug: SamplePlug.EchoPath, path: "/api", rewrite_path_info: false)
+      ]
+
+      conn = conn(:post, "/api/v1")
+      conn = dispatch(conn, backends)
+
+      assert conn.state == :sent
+      assert conn.status == 200
+      assert conn.resp_body == "/api/v1"
+    end
+  end
+
   describe "Respond with" do
     test "General Plug is supported" do
       backends = [
