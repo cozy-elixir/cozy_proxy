@@ -204,8 +204,8 @@ defmodule CozyProxy do
   alias CozyProxy.Config
   alias CozyProxy.Dispatcher
 
-  def start_link(init_arg) do
-    Supervisor.start_link(__MODULE__, init_arg)
+  def start_link(init_arg, opts \\ []) do
+    Supervisor.start_link(__MODULE__, init_arg, opts)
   end
 
   @impl true
