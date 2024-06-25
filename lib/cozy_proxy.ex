@@ -231,7 +231,7 @@ defmodule CozyProxy do
 
     check_adapter_module!(config.adapter)
 
-    start_server? = config.server || is_phoenix_on?()
+    start_server? = config.server || phoenix_on?()
 
     children =
       if start_server?,
@@ -291,7 +291,7 @@ defmodule CozyProxy do
   # + run `iex -S mix phx.server`
   # + run `mix phx.server`
   #
-  defp is_phoenix_on?() do
+  defp phoenix_on?() do
     Application.get_env(:phoenix, :serve_endpoints, false)
   end
 
