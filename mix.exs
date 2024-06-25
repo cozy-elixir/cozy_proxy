@@ -38,7 +38,7 @@ defmodule CozyProxy.MixProject do
       {:plug, "~> 1.14"},
       {:plug_cowboy, ">= 2.6.0", optional: true},
       {:bandit, "~> 1.0", optional: true},
-      {:ex_check, "~> 0.15.0", only: [:dev], runtime: false},
+      {:ex_check, ">= 0.0.0", only: [:dev], runtime: false},
       {:credo, ">= 0.0.0", only: [:dev], runtime: false},
       {:dialyxir, ">= 0.0.0", only: [:dev], runtime: false},
       {:doctor, ">= 0.0.0", only: [:dev], runtime: false},
