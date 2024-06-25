@@ -18,6 +18,10 @@ jobs:
       # And, only the most recent 3 versions of Elixir are involved.
       matrix:
         include:
+          # Elixir v1.17
+          - { elixir: '1.17.x', otp: '27.x' }
+          - { elixir: '1.17.x', otp: '26.x' }
+          - { elixir: '1.17.x', otp: '25.x' }
           # Elixir v1.16
           - { elixir: '1.16.x', otp: '26.x' }
           - { elixir: '1.16.x', otp: '25.x' }
@@ -26,10 +30,6 @@ jobs:
           - { elixir: '1.15.x', otp: '26.x' }
           - { elixir: '1.15.x', otp: '25.x' }
           - { elixir: '1.15.x', otp: '24.x' }
-          # Elixir v1.14
-          - { elixir: '1.14.x', otp: '25.x' }
-          - { elixir: '1.14.x', otp: '24.x' }
-          - { elixir: '1.14.x', otp: '23.x' }
     steps:
     - uses: actions/checkout@v3
     - name: Setup Elixir
