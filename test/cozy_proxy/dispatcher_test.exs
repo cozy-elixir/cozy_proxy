@@ -145,6 +145,7 @@ defmodule CozyProxy.DispatcherTest do
       # But, I don't know how to test it in `mix test` for now.
     end
 
+    @tag capture_log: true
     test "Phoenix Endpoint is supported" do
       # prevent the warning of missing necessary configuration
       Application.put_env(:sample_phoenix, SamplePhoenix.Endpoint, [])
