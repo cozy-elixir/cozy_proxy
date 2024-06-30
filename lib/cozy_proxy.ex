@@ -204,8 +204,12 @@ defmodule CozyProxy do
   alias CozyProxy.Config
   alias CozyProxy.Dispatcher
 
-  def start_link(init_arg, opts \\ []) do
-    Supervisor.start_link(__MODULE__, init_arg, opts)
+  def start_link(opts) do
+    {name, rest} = Keyword.pop(opts, :name)
+
+    init_arg = rest
+    options = [name: name] |> Enum.reject(fn {_k, v} -> v == nil end)
+    Supervisor.start_link(__MODULE__, init_arg, options)
   end
 
   @impl true
