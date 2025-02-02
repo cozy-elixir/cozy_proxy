@@ -3,7 +3,7 @@
 [![CI](https://github.com/cozy-elixir/cozy_proxy/actions/workflows/ci.yml/badge.svg)](https://github.com/cozy-elixir/cozy_proxy/actions/workflows/ci.yml)
 [![Hex.pm](https://img.shields.io/hexpm/v/cozy_proxy.svg)](https://hex.pm/packages/cozy_proxy)
 
-> Proxy requests to other plugs.
+Proxy requests to other plugs.
 
 ## Features
 
@@ -26,7 +26,7 @@ end
 
 ## Usage
 
-For more information, see the [documentation](https://hexdocs.pm/cozy_proxy/CozyProxy.html).
+For more information, see the [documentation](https://hexdocs.pm/cozy_proxy).
 
 ## Thanks
 
