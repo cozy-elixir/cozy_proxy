@@ -12,12 +12,16 @@ permissions:
 jobs:
   mix_check:
     name: Elixir ${{ matrix.elixir }} / OTP ${{ matrix.otp }}
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     strategy:
       # Following matrix is maintained by following https://hexdocs.pm/elixir/compatibility-and-deprecations.html
       # And, only the most recent 3 versions of Elixir are involved.
       matrix:
         include:
+          # Elixir v1.18
+          - { elixir: '1.18.x', otp: '27.x' }
+          - { elixir: '1.18.x', otp: '26.x' }
+          - { elixir: '1.18.x', otp: '25.x' }
           # Elixir v1.17
           - { elixir: '1.17.x', otp: '27.x' }
           - { elixir: '1.17.x', otp: '26.x' }
@@ -26,19 +30,15 @@ jobs:
           - { elixir: '1.16.x', otp: '26.x' }
           - { elixir: '1.16.x', otp: '25.x' }
           - { elixir: '1.16.x', otp: '24.x' }
-          # Elixir v1.15
-          - { elixir: '1.15.x', otp: '26.x' }
-          - { elixir: '1.15.x', otp: '25.x' }
-          - { elixir: '1.15.x', otp: '24.x' }
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Setup Elixir
       uses: erlef/setup-beam@v1
       with:
         elixir-version: ${{ matrix.elixir }}
         otp-version: ${{ matrix.otp }}
     - name: Restore dependencies cache
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: deps
         key: ${{ runner.os }}-elixir_${{ matrix.elixir }}-otp_${{ matrix.otp }}-mix_${{ hashFiles('**/mix.lock') }}
